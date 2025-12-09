@@ -58,16 +58,16 @@ The MCP essentially **extends your agent's capabilities** by giving it access to
 
 The Fraud Alert Manager API is a pre-built service that simulates fraud alerting functionalities. It provides endpoints to create, retrieve, and manage fraud alerts. This service is hosted on an Azure Container App and has been pre-configured and deployed for this challenge.
 
-Before we start, familiarize yourself with the API documentation provided by the Swagger UI at your Container Apps URL:
+Before we start, familiarize yourself with the API documentation provided by the Swagger UI at your Container Apps URL. The script below will compose the URL for you. Make sure to replace the placeholder with your resource group name before running:
 
-```
+```bash
 RG=<your_resource_group_name>
 CONTAINER_APP=$(az containerapp list --resource-group $RG --query "[0].name" -o tsv)
 CONTAINER_APP_URL=$(az containerapp show --name $CONTAINER_APP --resource-group $RG --query properties.configuration.ingress.fqdn -o tsv)
 echo "Swagger UI URL: http://$CONTAINER_APP_URL/v1/swagger-ui/index.html"
 ```
 
-### Onboard you API to Azure API Management
+### Onboard your API to Azure API Management
 
 1. **Import the Fraud Alert Manager API**:
    - Navigate to your API Management instance in the Azure portal.
