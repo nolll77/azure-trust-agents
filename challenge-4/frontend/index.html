@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fraud Alert Management Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav style="background:#1a2533;padding:1rem 0;display:flex;justify-content:center;gap:2rem;">
+      <a href="#dashboard" style="color:#fff;text-decoration:none;font-weight:bold;">Main Dashboard</a>
+      <a href="#alerts-list" style="color:#fff;text-decoration:none;font-weight:bold;">Alert Management</a>
+    </nav>
+    <h1 style="margin-top:1rem;">Fraud Alert Management Dashboard</h1>
+  </header>
+  <main>
+    <section id="dashboard">
+      <h2>📊 Main Dashboard</h2>
+      <div class="card">
+        <p>Total Alerts: <span id="total-alerts">--</span></p>
+        <p>Active Alerts: <span id="active-alerts">--</span></p>
+        <p>Resolved Alerts: <span id="resolved-alerts">--</span></p>
+      </div>
+    </section>
+    <section id="alerts-list">
+      <h2>🔍 Advanced Alert Management</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Severity</th>
+            <th>Created At</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="alerts-table">
+          <!-- Alerts will be loaded here -->
+        </tbody>
+      </table>
+    </section>
+    <section id="alert-detail" style="display:none;">
+      <h2>🔍 Alert Details View</h2>
+      <div id="alert-detail-content">
+        <!-- Details will be loaded here -->
+      </div>
+      <button onclick="closeDetail()">Close</button>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
