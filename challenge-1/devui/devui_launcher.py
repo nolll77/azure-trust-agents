@@ -13,6 +13,8 @@ Usage:
 """
 
 import argparse
+import redis
+import hashlib
 import asyncio
 import logging
 import os
@@ -79,20 +81,20 @@ def launch_agents_mode(port: int = 8081):
     
     # Import agents
     try:
-        from customer_data_agent import agent as customer_agent
-        from risk_analyser_agent import agent as risk_agent
-        from compliance_report_agent import agent as compliance_agent
-        
+        from devui.customer_data_agent import agent as customer_agent
+        from devui.risk_analyser_agent import agent as risk_agent
+        from devui.compliance_report_agent import agent as compliance_agent
+
         agents = [customer_agent, risk_agent, compliance_agent]
-        
+
         print(f"🚀 Launching DevUI with {len(agents)} agents on port {port}")
         print("🤖 Available agents:")
         for agent in agents:
             print(f"   - {agent.name}")
         print(f"🌐 Access at: http://localhost:{port}")
-        
+
         serve(entities=agents, port=port, auto_open=True)
-        
+
     except ImportError as e:
         print(f"❌ Error importing agents: {e}")
         sys.exit(1)
@@ -103,17 +105,26 @@ def launch_workflow_mode(port: int = 8082):
     
     # Import workflow
     try:
-        from fraud_detection_workflow import workflow
-        
+        from devui.fraud_detection_workflow import workflow
+
         print(f"🚀 Launching DevUI with fraud detection workflow on port {port}")
         print(f"🔄 Workflow: {workflow.name}")
         print(f"🌐 Access at: http://localhost:{port}")
-        
+
         serve(entities=[workflow], port=port, auto_open=True)
-        
+
     except ImportError as e:
         print(f"❌ Error importing workflow: {e}")
         sys.exit(1)
+
+def get_cache():
+    try:
+        return redis.Redis(host='redis', port=6379, db=0)
+    except Exception:
+        return None
+
+def cache_key(prompt):
+    return hashlib.sha256(prompt.encode()).hexdigest()
 
 def launch_all_mode(port: int = 8080):
     """Launch DevUI with all entities in-memory"""
@@ -121,13 +132,15 @@ def launch_all_mode(port: int = 8080):
     
     # Import all entities
     try:
-        from customer_data_agent import agent as customer_agent
-        from risk_analyser_agent import agent as risk_agent
-        from compliance_report_agent import agent as compliance_agent
-        from fraud_detection_workflow import workflow
-        
+        from devui.customer_data_agent import agent as customer_agent
+        from devui.risk_analyser_agent import agent as risk_agent
+        from devui.compliance_report_agent import agent as compliance_agent
+        from devui.fraud_detection_workflow import workflow
+
+
+        cache = get_cache()
         entities = [customer_agent, risk_agent, compliance_agent, workflow]
-        
+
         print(f"🚀 Launching DevUI with all entities on port {port}")
         print("🤖 Available agents:")
         for entity in entities:
@@ -139,9 +152,24 @@ def launch_all_mode(port: int = 8080):
         print("   • Individual agents for specific tasks")
         print("   • The complete fraud detection workflow")
         print("   • Test different transaction IDs (TX1001, TX2002, etc.)")
-        
+
+
+        # Patch agents to use cache
+        for agent in entities:
+            if hasattr(agent, 'chat_client'):
+                orig_run = agent.chat_client.run
+                def cached_run(prompt, *args, **kwargs):
+                    key = cache_key(prompt)
+                    if cache and cache.exists(key):
+                        return type('Result', (), {'text': cache.get(key).decode()})()
+                    result = orig_run(prompt, *args, **kwargs)
+                    if cache:
+                        cache.set(key, result.text)
+                    return result
+                agent.chat_client.run = cached_run
+
         serve(entities=entities, port=port, auto_open=True)
-        
+
     except ImportError as e:
         print(f"❌ Error importing entities: {e}")
         print("Make sure all agent and workflow modules are properly configured.")
